@@ -26,7 +26,9 @@ This Spring Boot Maven project is designed to optimize images in a specified dir
 - Maven
 ## Installation
 1. Clone the repository:
+```bash
    git clone https://github.com/your-username/image-optimizer.git
+```
 2. Change into the project directory:
 
 ```bash
