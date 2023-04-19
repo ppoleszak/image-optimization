@@ -1,4 +1,4 @@
-# Image Optimizer
+# Image Optimization
 ## Introduction
 
 This Spring Boot Maven project is designed to optimize images in a specified directory. It can be used to compress and convert images to the WebP format, which reduces file sizes while maintaining image quality. The project uses the 'webp-imageio' library provided by the following dependency:
