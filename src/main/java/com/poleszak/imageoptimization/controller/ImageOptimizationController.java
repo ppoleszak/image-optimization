@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.context.request.async.DeferredResult;
 
+import javax.validation.Valid;
 import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
 
@@ -22,7 +23,7 @@ public class ImageOptimizationController {
     private static final Logger LOGGER = LoggerFactory.getLogger(ImageOptimizationController.class);
 
     @PostMapping
-    public DeferredResult<ResponseEntity<?>> optimizeAllImagesInDirPath(@RequestBody OptimizeImagesDirPathRequest optimizeImagesDirPathRequest) throws IOException {
+    public DeferredResult<ResponseEntity<?>> optimizeAllImagesInDirPath(@Valid @RequestBody OptimizeImagesDirPathRequest optimizeImagesDirPathRequest) throws IOException {
         LOGGER.info("Optimization request received for directory: {}", optimizeImagesDirPathRequest.getDirPath());
         DeferredResult<ResponseEntity<?>> deferredResult = new DeferredResult<>();
 

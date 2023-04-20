@@ -17,13 +17,15 @@ import static javax.imageio.ImageWriteParam.MODE_EXPLICIT;
 
 @Component
 public class ImageWriterHelper {
+    private static final float COMPRESSION_QUALITY = 0.4F;
+
     public void writeOptimizedImage(BufferedImage image, String outputFilePath) throws ImageWriteException, IOException {
         ImageWriter writer = new WebPImageWriterSpi().createWriterInstance();
         ImageWriteParam writeParam = new WebPWriteParam(writer.getLocale());
 
         writeParam.setCompressionMode(MODE_EXPLICIT);
         writeParam.setCompressionType(writeParam.getCompressionTypes()[LOSSY_COMPRESSION]);
-        writeParam.setCompressionQuality(0.4F);
+        writeParam.setCompressionQuality(COMPRESSION_QUALITY);
 
         try (FileImageOutputStream outputStream = new FileImageOutputStream(new File(outputFilePath))) {
             writer.setOutput(outputStream);

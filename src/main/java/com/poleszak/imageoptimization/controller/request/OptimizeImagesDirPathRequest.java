@@ -1,5 +1,6 @@
 package com.poleszak.imageoptimization.controller.request;
 
+import javax.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -7,5 +8,6 @@ import lombok.Setter;
 @Setter
 public class OptimizeImagesDirPathRequest {
 
+    @NotNull
     private String dirPath;
 }

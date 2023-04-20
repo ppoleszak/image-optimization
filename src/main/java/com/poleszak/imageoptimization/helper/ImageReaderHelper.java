@@ -8,7 +8,9 @@ import javax.imageio.stream.ImageInputStream;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.util.Iterator;
+import java.util.Optional;
+
+import static java.util.Optional.ofNullable;
 
 @Component
 public class ImageReaderHelper {
@@ -17,17 +19,19 @@ public class ImageReaderHelper {
             if (inputStream == null) {
                 throw new ImageReadException("Cannot read the image file: " + inputFilePath);
             }
-            Iterator<ImageReader> readers = ImageIO.getImageReaders(inputStream);
-            if (!readers.hasNext()) {
+            Optional<ImageReader> readerOptional = ofNullable(ImageIO.getImageReaders(inputStream).next());
+
+            if (!readerOptional.isPresent()) {
                 throw new ImageReadException("No ImageReader found for the provided image file");
             }
-            ImageReader reader = readers.next();
+            ImageReader reader = readerOptional.get();
             reader.setInput(inputStream);
             return reader.read(0);
         } catch (IOException e) {
             throw new ImageReadException("An error occurred while reading the image", e);
         }
     }
+
 
     public static class ImageReadException extends Exception {
         public ImageReadException(String message) {

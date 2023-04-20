@@ -36,27 +36,36 @@ public class ImageOptimizer {
 
     public CompletableFuture<Void> optimizeAllImages(String dirPath, Semaphore semaphore) throws IOException {
         LOGGER.info("Starting optimization for all images in directory {}", dirPath);
-        File[] files = directoryHelper.getFilesFromDirectory(dirPath);
+        List<File> files = directoryHelper.getFilesFromDirectory(dirPath);
         validateFilesNotNull(files);
 
         List<CompletableFuture<Void>> tasks = new ArrayList<>();
         for (File file : files) {
             if (file.isFile()) {
                 String inputFilePath = file.getAbsolutePath();
-                String outputFilePath = inputFilePath.replaceFirst("[.][^.]+$", "") + ".webp";
-                try {
-                    semaphore.acquire();
-                    tasks.add(optimizeImage(inputFilePath, outputFilePath)
-                            .whenComplete((__, throwable) -> semaphore.release()));
-                } catch (InterruptedException e) {
-                    LOGGER.error("Failed to acquire semaphore for image optimization", e);
-                }
+                tasks.add(createOptimizationTask(inputFilePath, semaphore));
             }
         }
 
         return CompletableFuture.allOf(tasks.toArray(new CompletableFuture[0]))
                 .thenRun(() -> LOGGER.info("Finished optimization for all images in directory {}", dirPath));
     }
+
+    private CompletableFuture<Void> createOptimizationTask(String inputFilePath, Semaphore semaphore) {
+        String outputFilePath = inputFilePath.replaceFirst("[.][^.]+$", "") + ".webp";
+        CompletableFuture<Void> optimizationTask = new CompletableFuture<>();
+
+        try {
+            semaphore.acquire();
+            optimizationTask = optimizeImage(inputFilePath, outputFilePath)
+                    .whenComplete((__, throwable) -> semaphore.release());
+        } catch (InterruptedException e) {
+            LOGGER.error("Failed to acquire semaphore for image optimization", e);
+        }
+
+        return optimizationTask;
+    }
+
 
     private CompletableFuture<Void> optimizeImage(String inputFilePath, String outputFilePath) {
         return CompletableFuture.runAsync(() -> {
@@ -72,7 +81,7 @@ public class ImageOptimizer {
     }
 
 
-    private static void validateFilesNotNull(File[] files) throws IOException {
+    private static void validateFilesNotNull(List<File> files) throws IOException {
         if (files == null) {
             throw new IOException("Could not find any files in the specified directory");
         }

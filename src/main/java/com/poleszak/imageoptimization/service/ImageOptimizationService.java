@@ -11,13 +11,16 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.Semaphore;
 
+import static java.lang.Void.TYPE;
+
 @Service
 @RequiredArgsConstructor
 public class ImageOptimizationService {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(ImageOptimizationService.class);
+    private static final int MAX_CONCURRENT_TASKS = 50;
+
     private final ImageOptimizer imageOptimizer;
-    private final int MAX_CONCURRENT_TASKS = 50;
     private final Semaphore semaphore = new Semaphore(MAX_CONCURRENT_TASKS);
 
     public CompletableFuture<Void> optimize(String dirPath) throws IOException {
@@ -25,7 +28,7 @@ public class ImageOptimizationService {
                 .exceptionally(e -> {
                     Throwable cause = e instanceof CompletionException ? e.getCause() : e;
                     LOGGER.error("An error occurred while optimizing images", cause);
-                    return null;
+                    return TYPE.cast(null);
                 });
     }
 }
