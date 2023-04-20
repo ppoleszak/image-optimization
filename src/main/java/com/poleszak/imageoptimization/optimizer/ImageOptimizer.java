@@ -13,7 +13,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -53,19 +52,18 @@ public class ImageOptimizer {
     }
 
     private CompletableFuture<Void> optimizeImage(String inputFilePath, String outputFilePath) {
-        return CompletableFuture.supplyAsync(() -> {
+        return CompletableFuture.runAsync(() -> {
             LOGGER.info("Starting optimization for image: {}", outputFilePath);
             try {
                 BufferedImage image = imageReaderHelper.readImage(inputFilePath);
                 imageWriterHelper.writeOptimizedImage(image, outputFilePath);
                 LOGGER.info("Successfully optimized and saved image: {}", outputFilePath);
             } catch (ImageReaderHelper.ImageReadException | ImageWriterHelper.ImageWriteException | IOException e) {
-                LOGGER.info("An error occurred while optimizing the image: {}", inputFilePath);
-                throw new CompletionException("An error occurred while optimizing the image", e);
+                LOGGER.error("An error occurred while optimizing the image: {}. Error: {}", inputFilePath, e.getMessage());
             }
-            return null;
         }, executorService);
     }
+
 
     private static void validateFilesNotNull(File[] files) throws IOException {
         if (files == null) {
