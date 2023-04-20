@@ -30,6 +30,8 @@ public class ImageWriterHelper {
             writer.write(null, new IIOImage(image, null, null), writeParam);
         } catch (IOException e) {
             throw new ImageWriteException("An error occurred while writing the optimized image", e);
+        } finally {
+            writer.dispose();
         }
     }
 

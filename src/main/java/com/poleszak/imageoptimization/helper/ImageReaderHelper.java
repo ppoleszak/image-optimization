@@ -13,7 +13,6 @@ import java.util.Iterator;
 @Component
 public class ImageReaderHelper {
     public BufferedImage readImage(String inputFilePath) throws ImageReadException {
-        BufferedImage image;
         try (ImageInputStream inputStream = ImageIO.createImageInputStream(new File(inputFilePath))) {
             Iterator<ImageReader> readers = ImageIO.getImageReaders(inputStream);
             if (!readers.hasNext()) {
@@ -21,11 +20,10 @@ public class ImageReaderHelper {
             }
             ImageReader reader = readers.next();
             reader.setInput(inputStream);
-            image = reader.read(0);
+            return reader.read(0);
         } catch (IOException e) {
             throw new ImageReadException("An error occurred while reading the image", e);
         }
-        return image;
     }
 
     public static class ImageReadException extends Exception {

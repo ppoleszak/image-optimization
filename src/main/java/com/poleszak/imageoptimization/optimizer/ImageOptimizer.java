@@ -3,7 +3,6 @@ package com.poleszak.imageoptimization.optimizer;
 import com.poleszak.imageoptimization.helper.DirectoryHelper;
 import com.poleszak.imageoptimization.helper.ImageReaderHelper;
 import com.poleszak.imageoptimization.helper.ImageWriterHelper;
-import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -15,9 +14,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 @Component
-@RequiredArgsConstructor
 public class ImageOptimizer {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ImageOptimizer.class);
@@ -25,6 +25,14 @@ public class ImageOptimizer {
     private final ImageReaderHelper imageReaderHelper;
     private final ImageWriterHelper imageWriterHelper;
     private final DirectoryHelper directoryHelper;
+    private final ExecutorService executorService;
+
+    public ImageOptimizer(ImageReaderHelper imageReaderHelper, ImageWriterHelper imageWriterHelper, DirectoryHelper directoryHelper) {
+        this.imageReaderHelper = imageReaderHelper;
+        this.imageWriterHelper = imageWriterHelper;
+        this.directoryHelper = directoryHelper;
+        this.executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+    }
 
     public CompletableFuture<Void> optimizeAllImages(String dirPath) throws IOException {
         LOGGER.info("Starting optimization for all images in directory {}", dirPath);
@@ -45,7 +53,7 @@ public class ImageOptimizer {
     }
 
     private CompletableFuture<Void> optimizeImage(String inputFilePath, String outputFilePath) {
-        return CompletableFuture.runAsync(() -> {
+        return CompletableFuture.supplyAsync(() -> {
             LOGGER.info("Starting optimization for image: {}", outputFilePath);
             try {
                 BufferedImage image = imageReaderHelper.readImage(inputFilePath);
@@ -55,7 +63,8 @@ public class ImageOptimizer {
                 LOGGER.info("An error occurred while optimizing the image: {}", inputFilePath);
                 throw new CompletionException("An error occurred while optimizing the image", e);
             }
-        });
+            return null;
+        }, executorService);
     }
 
     private static void validateFilesNotNull(File[] files) throws IOException {
