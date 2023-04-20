@@ -14,6 +14,9 @@ import java.util.Iterator;
 public class ImageReaderHelper {
     public BufferedImage readImage(String inputFilePath) throws ImageReadException {
         try (ImageInputStream inputStream = ImageIO.createImageInputStream(new File(inputFilePath))) {
+            if (inputStream == null) {
+                throw new ImageReadException("Cannot read the image file: " + inputFilePath);
+            }
             Iterator<ImageReader> readers = ImageIO.getImageReaders(inputStream);
             if (!readers.hasNext()) {
                 throw new ImageReadException("No ImageReader found for the provided image file");
