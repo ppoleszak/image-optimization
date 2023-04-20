@@ -2,7 +2,6 @@ package com.poleszak.imageoptimization.service;
 
 import com.poleszak.imageoptimization.optimizer.ImageOptimizer;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -12,7 +11,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 
 @Service
-@Slf4j
 @RequiredArgsConstructor
 public class ImageOptimizationService {
 
@@ -23,7 +21,7 @@ public class ImageOptimizationService {
         return imageOptimizer.optimizeAllImages(dirPath)
                 .exceptionally(e -> {
                     Throwable cause = e instanceof CompletionException ? e.getCause() : e;
-                    LOGGER.error("An error occurred while optimizing images", cause);
+                    LOGGER.error("An error occurred while optimizing images for directory: {}", dirPath, cause);
                     return null;
                 });
     }
