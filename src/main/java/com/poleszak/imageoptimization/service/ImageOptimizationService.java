@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
+import java.util.concurrent.Semaphore;
 
 @Service
 @RequiredArgsConstructor
@@ -16,12 +17,14 @@ public class ImageOptimizationService {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(ImageOptimizationService.class);
     private final ImageOptimizer imageOptimizer;
+    private final int MAX_CONCURRENT_TASKS = 50;
+    private final Semaphore semaphore = new Semaphore(MAX_CONCURRENT_TASKS);
 
     public CompletableFuture<Void> optimize(String dirPath) throws IOException {
-        return imageOptimizer.optimizeAllImages(dirPath)
+        return imageOptimizer.optimizeAllImages(dirPath, semaphore)
                 .exceptionally(e -> {
                     Throwable cause = e instanceof CompletionException ? e.getCause() : e;
-                    LOGGER.error("An error occurred while optimizing images for directory: {}", dirPath, cause);
+                    LOGGER.error("An error occurred while optimizing images", cause);
                     return null;
                 });
     }

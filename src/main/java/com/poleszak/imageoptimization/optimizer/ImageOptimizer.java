@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Semaphore;
 
 @Component
 public class ImageOptimizer {
@@ -33,7 +34,7 @@ public class ImageOptimizer {
         this.executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
     }
 
-    public CompletableFuture<Void> optimizeAllImages(String dirPath) throws IOException {
+    public CompletableFuture<Void> optimizeAllImages(String dirPath, Semaphore semaphore) throws IOException {
         LOGGER.info("Starting optimization for all images in directory {}", dirPath);
         File[] files = directoryHelper.getFilesFromDirectory(dirPath);
         validateFilesNotNull(files);
@@ -43,7 +44,13 @@ public class ImageOptimizer {
             if (file.isFile()) {
                 String inputFilePath = file.getAbsolutePath();
                 String outputFilePath = inputFilePath.replaceFirst("[.][^.]+$", "") + ".webp";
-                tasks.add(optimizeImage(inputFilePath, outputFilePath));
+                try {
+                    semaphore.acquire();
+                    tasks.add(optimizeImage(inputFilePath, outputFilePath)
+                            .whenComplete((__, throwable) -> semaphore.release()));
+                } catch (InterruptedException e) {
+                    LOGGER.error("Failed to acquire semaphore for image optimization", e);
+                }
             }
         }
 
