@@ -74,7 +74,6 @@ public class ImageOptimizer {
         return optimizationTask;
     }
 
-
     private CompletableFuture<Void> optimizeImage(String inputFilePath, String outputFilePath, String imageType) {
         return CompletableFuture.runAsync(() -> {
             LOGGER.info("Starting optimization for image: {}", outputFilePath);
@@ -87,7 +86,6 @@ public class ImageOptimizer {
             }
         }, executorService);
     }
-
 
     private static void validateFilesNotNull(List<File> files) throws IOException {
         if (files == null) {

@@ -9,5 +9,4 @@ public class ImageOptimizationApplication {
     public static void main(String[] args) {
         SpringApplication.run(ImageOptimizationApplication.class, args);
     }
-
 }
