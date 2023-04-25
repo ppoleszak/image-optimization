@@ -10,6 +10,7 @@ import com.luciad.imageio.webp.WebPWriteParam;
 import org.springframework.stereotype.Component;
 
 import javax.imageio.IIOImage;
+import javax.imageio.ImageIO;
 import javax.imageio.ImageWriteParam;
 import javax.imageio.ImageWriter;
 import javax.imageio.stream.FileImageOutputStream;
@@ -23,7 +24,6 @@ import java.io.IOException;
 
 import static com.drew.metadata.exif.ExifDirectoryBase.TAG_ORIENTATION;
 import static com.luciad.imageio.webp.WebPWriteParam.LOSSY_COMPRESSION;
-import static java.awt.image.AffineTransformOp.TYPE_BILINEAR;
 import static java.lang.Math.PI;
 import static javax.imageio.ImageWriteParam.MODE_EXPLICIT;
 
@@ -33,16 +33,16 @@ public class ImageWriterHelper {
 
     public void writeOptimizedImage(BufferedImage image, String outputFilePath, String imageType) throws ImageWriteException, IOException {
         ByteArrayOutputStream byteArray = new ByteArrayOutputStream();
+        ImageIO.write(image, imageType, byteArray);
 
         ImageWriter writer = new WebPImageWriterSpi().createWriterInstance();
         ImageWriteParam writeParam = new WebPWriteParam(writer.getLocale());
 
-        if (imageType.equals("JPEG") || imageType.equals("JPG")) {
-
+        if ("JPEG".equalsIgnoreCase(imageType)) {
             try {
-                image = prepareMetadataAndRotateImage(byteArray, image);
+                image = prepareMetadataAndRotateImage(new ByteArrayInputStream(byteArray.toByteArray()), image);
             } catch (ImageProcessingException e) {
-                throw new ImageWriteException("Problem with process image: " + outputFilePath, e);
+                throw new ImageWriteException("Problem with processing image: " + outputFilePath, e);
             }
         }
 
@@ -60,44 +60,53 @@ public class ImageWriterHelper {
         }
     }
 
-    private BufferedImage prepareMetadataAndRotateImage(ByteArrayOutputStream byteArray, BufferedImage image) throws ImageProcessingException, IOException {
-        Metadata metadata = ImageMetadataReader.readMetadata(new ByteArrayInputStream(byteArray.toByteArray()));
+
+    private BufferedImage prepareMetadataAndRotateImage(ByteArrayInputStream byteArray, BufferedImage image) throws ImageProcessingException, IOException {
+        Metadata metadata = ImageMetadataReader.readMetadata(byteArray);
         ExifIFD0Directory exifIFD0Directory = metadata.getFirstDirectoryOfType(ExifIFD0Directory.class);
-        int orientation = 1;
-        if (exifIFD0Directory != null) {
-            try {
-                orientation = exifIFD0Directory.getInt(TAG_ORIENTATION);
-            } catch (MetadataException e) {
-                e.printStackTrace();
-            }
+
+        if (exifIFD0Directory == null) {
+            return image;
         }
-        if (orientation != 1) {
-            image = rotateImage(image, orientation);
+
+        int orientation;
+        try {
+            orientation = exifIFD0Directory.getInt(TAG_ORIENTATION);
+        } catch (MetadataException e) {
+            return image;
         }
-        return image;
+
+        return rotateImage(image, orientation);
     }
 
+
     private BufferedImage rotateImage(BufferedImage image, int orientation) {
-        double angle;
+        int width = image.getWidth();
+        int height = image.getHeight();
+        AffineTransform at = new AffineTransform();
+
         switch (orientation) {
             case 3:
-                angle = PI;
+                at.translate(width, height);
+                at.rotate(PI);
                 break;
             case 6:
-                angle = PI / 2;
+                at.translate(height, 0);
+                at.rotate(PI / 2);
                 break;
             case 8:
-                angle = -PI / 2;
+                at.translate(0, width);
+                at.rotate(-PI / 2);
                 break;
             default:
                 return image;
         }
-        double centerX = image.getWidth() / 2.0;
-        double centerY = image.getHeight() / 2.0;
-        AffineTransform at = AffineTransform.getRotateInstance(angle, centerX, centerY);
-        AffineTransformOp op = new AffineTransformOp(at, TYPE_BILINEAR);
-        return op.filter(image, null);
+
+        AffineTransformOp op = new AffineTransformOp(at, AffineTransformOp.TYPE_BILINEAR);
+        BufferedImage rotatedImage = new BufferedImage(width, height, image.getType());
+        return op.filter(image, rotatedImage);
     }
+
 
     public static class ImageWriteException extends Exception {
         public ImageWriteException(String message, Throwable cause) {
