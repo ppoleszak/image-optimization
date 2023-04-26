@@ -34,7 +34,7 @@ public class ImageWriterHelper {
         ImageWriter writer = new WebPImageWriterSpi().createWriterInstance();
         ImageWriteParam writeParam = new WebPWriteParam(writer.getLocale());
 
-        if ("JPEG".equalsIgnoreCase(imageType) || "JPG".equalsIgnoreCase(imageType)) {
+        if ("JPEG".equalsIgnoreCase(imageType) || "JPG".equalsIgnoreCase(imageType) || "PNG".equalsIgnoreCase(imageType)) {
             try {
                 image = imageRotateHelper.prepareMetadataAndRotateImage(new ByteArrayInputStream(byteArray.toByteArray()), image);
             } catch (ImageProcessingException e) {
